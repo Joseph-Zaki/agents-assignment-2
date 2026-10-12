@@ -13,13 +13,8 @@ from google.adk.tools.mcp_tool import McpToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
 from mcp import StdioServerParameters
 from tools.calendar_tools import calendar_tools
-
-# TODO: Import your chosen tool set
-# from tools.calendar_tools import calendar_tools
-# from tools.tasks_tools import tasks_tools
-
 # TODO Part 2: Import MCP tools
-# from tools.mcp_tools import mcp_tools
+from tools.mcp_tools import mcp_tools
 
 
 def create_agent() -> LlmAgent:
@@ -29,7 +24,10 @@ def create_agent() -> LlmAgent:
     # TODO Part 1: Write your system instruction
     SYSTEM_INSTRUCTION = '''
         You are a helpful calendar management agent. You can provide information about scheduled events and book additional events.
+        You can schedule, delete, and reschedule events.
         You always ask for clarifying information when necessary (date, time, location, other info)
+
+        You also are a GitHub assistant and can access repos, manage issues, manage pull requests, etc.
 
         You have the following tools:
         - `list_upcoming_events(max_results: int = 10, from_timestamp: str | None = None, to_timestamp: str | None = None)` - when you need to view events within a date and time or the user asks what's they have on their calendar
@@ -44,13 +42,14 @@ def create_agent() -> LlmAgent:
         '''
 
     # TODO Part 2: Create McpToolset for GitHub
+    github_tools = mcp_tools
 
     # TODO: Create and return your LlmAgent
     calendar_agent = LlmAgent(
         name = "calendar_assistant",
         model = settings.model_name,
         instruction=SYSTEM_INSTRUCTION,
-        tools=calendar_tools
+        tools=calendar_tools + github_tools
     )
     return calendar_agent
 

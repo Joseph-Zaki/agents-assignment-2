@@ -9,7 +9,8 @@ from typing import Optional
 from zoneinfo import ZoneInfo
 
 from google.adk.tools import FunctionTool
-from tools.auth import get_calendar_service
+
+from .auth import get_calendar_service
 
 # TODO: Implement your calendar tools
 # Define each tool as a plain Python function with a clear docstring and type
