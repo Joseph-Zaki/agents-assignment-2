@@ -129,7 +129,25 @@ def create_event(summary: str, start_timestamp: str, end_timestamp: str, descrip
         return {"status": "error", "message": str(e)}
 
 
-calendar_tools = [list_upcoming_events, create_event]
+def delete_event(eventId: str):
+    '''
+    Delete the event with the provided eventId.
+
+    Args:
+        - eventId: The ID of the event you wish to delete.
+    '''
+    try:
+        service = get_calendar_service()
+        deleted_event = service.events().delete(
+            calendarId = 'primary',
+            eventId = eventId
+        ).execute()
+
+        return {"status" : "success", "message": f"Event {eventId} deleted. API response {deleted_event.status}"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+    
+calendar_tools = [list_upcoming_events, create_event, delete_event]
 
 if __name__ == "__main__":
     print(list_upcoming_events())
