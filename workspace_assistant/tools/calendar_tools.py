@@ -42,16 +42,15 @@ def list_upcoming_events(max_results: int = 10, from_timestamp: str | None = Non
         try:
             from_datetime = datetime.fromisoformat(from_timestamp)
         except Exception as e:
-            return {"status" : "error", "message" : str(e)}
+            return {"status" : "error", "message" : f"Invalid timestamp: {str(e)}"}
 
     if to_timestamp:
         try:
             to_datetime = datetime.fromisoformat(to_timestamp)
         except Exception as e:
-            return {"status" : "error", "message" : str(e)}
+            return {"status" : "error", "message" : f"Invalid timestamp: {str(e)}"}
 
     try:
-        service = get_calendar_service()
         events_result = service.events().list(
             calendarId='primary', 
             maxResults=max_results, 
@@ -60,7 +59,7 @@ def list_upcoming_events(max_results: int = 10, from_timestamp: str | None = Non
         ).execute()
         return {"status": "success", "events": events_result.get("items", [])}
     except Exception as e:
-        return {"status": "error", "message": str(e)}
+        return {"status": "error", "message": f"Error fetching events: {str(e)}"}
 
 
 def create_event(summary: str, start_timestamp: str, end_timestamp: str, description: str | None = None, location: str | None = None) -> dict:
@@ -107,7 +106,6 @@ def create_event(summary: str, start_timestamp: str, end_timestamp: str, descrip
         if location:
             event_body["location"] = location
 
-        service = get_calendar_service()
         created_event = service.events().insert(
             calendarId = "primary",
             body = event_body
@@ -137,7 +135,6 @@ def delete_event(eventId: str) -> dict:
         - eventId: The ID of the event you wish to delete.
     '''
     try:
-        service = get_calendar_service()
         deleted_event = service.events().delete(
             calendarId = 'primary',
             eventId = eventId
@@ -181,8 +178,8 @@ def reschedule_event(eventId: str, new_start_timestamp: str, new_end_timestamp: 
             calendarId = "primary",
             eventId = eventId,
             body = {
-                "start" : _format_datetime(start_datetime),
-                "end" : _format_datetime(end_datetime)
+                "start" : {"dateTime" : _format_datetime(start_datetime)},
+                "end" : {"dateTime" : _format_datetime(end_datetime)}
             }
         ).execute()
 
@@ -203,7 +200,7 @@ def reschedule_event(eventId: str, new_start_timestamp: str, new_end_timestamp: 
 
 
     
-calendar_tools = [list_upcoming_events, create_event, delete_event]
+calendar_tools = [list_upcoming_events, create_event, delete_event, reschedule_event]
 
 if __name__ == "__main__":
     print(list_upcoming_events())
