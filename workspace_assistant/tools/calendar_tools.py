@@ -129,7 +129,7 @@ def create_event(summary: str, start_timestamp: str, end_timestamp: str, descrip
         return {"status": "error", "message": str(e)}
 
 
-def delete_event(eventId: str):
+def delete_event(eventId: str) -> dict:
     '''
     Delete the event with the provided eventId.
 
@@ -146,6 +146,62 @@ def delete_event(eventId: str):
         return {"status" : "success", "message": f"Event {eventId} deleted. API response {deleted_event.status}"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+def reschedule_event(eventId: str, new_start_timestamp: str, new_end_timestamp: str) -> dict:
+    """
+    Reschedule an existing Google Calendar event.
+
+    Args:
+        eventId: The ID of the event to reschedule.
+        new_start_time: RFC 3339 start timestamp with timezone offset,
+                        e.g. '2026-10-12T14:00:00-07:00'.
+        new_end_time: RFC 3339 start timestamp with timezone offset,
+                        e.g. '2026-10-12T14:00:00-07:00'.
+
+    Returns:
+        A dictionary indicating success or failure.
+    """
+    try:
+        start_datetime = datetime.fromisoformat(new_start_timestamp)
+        end_datetime = datetime.fromisoformat(new_end_timestamp)
+        # verify timezone offset is included
+        if start_datetime.utcoffset() is None or end_datetime.utcoffset() is None:
+            return {
+                "status": "error",
+                "message": "Both timestamps must include a timezone offset, such as -07:00 or +00:00."
+            }
+
+        if end_datetime <= start_datetime:
+            return {
+                "status" : "error",
+                "message" : "End time must come after start time."
+            }
+        
+        updated_event = service.events().patch(
+            calendarId = "primary",
+            eventId = eventId,
+            body = {
+                "start" : _format_datetime(start_datetime),
+                "end" : _format_datetime(end_datetime)
+            }
+        ).execute()
+
+        return {
+            "status": "success",
+            "message": f"Event '{updated_event.get('summary', eventId)}' rescheduled successfully.",
+            "event": {
+                "id": updated_event.get("id"),
+                "summary": updated_event.get("summary"),
+                "start": updated_event.get("start"),
+                "end": updated_event.get("end"),
+                "htmlLink": updated_event.get("htmlLink"),
+            },
+        }
+
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
     
 calendar_tools = [list_upcoming_events, create_event, delete_event]
 

@@ -35,6 +35,7 @@ def create_agent() -> LlmAgent:
         - `list_upcoming_events(max_results: int = 10, from_timestamp: str | None = None, to_timestamp: str | None = None)` - when you need to view events within a date and time or the user asks what's they have on their calendar
         - `create_event(summary: str, start_timestamp: str, end_timestamp: str, description: str | None = None, location: str | None = None)` - when you need to create an event. this also returns details of the event after creation.
         - `delete_event(eventId: str)` - Delete the event with the provided ID. You most likely need to use `list_upcoming_events` first to get the ID. If the target event is not returned, ask user for the date to then use `list_upcoming_events` with a specific date range.
+        - `reschedule_event(eventId: str, new_start_timestamp: str, new_end_timestamp: str) - Reschedule an event to a new start and end time. You most likely need to use `list_upcoming_events` first to get the ID.
         Always provide datetime objects in RFC3339 fromat with timezone offset. Unless otherwise specified, use Los Angeles timezone.
 
         Example: User asks you to schedule Music Lesson on November 5th at 7.
