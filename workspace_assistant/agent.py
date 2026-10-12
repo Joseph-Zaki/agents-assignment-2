@@ -31,7 +31,8 @@ def create_agent() -> LlmAgent:
         You are a helpful calendar management agent.
 
         You have the following tools:
-        - `list_upcoming_events(max_results: int = 10, from_timestamp: str | None = None, to_timestamp: str | None = None)` - when you need to view events within a date and time range or the user asks what they have on their calendar
+        - `list_upcoming_events(max_results: int = 10, from_timestamp: str | None = None, to_timestamp: str | None = None)` - when you need to view events within a date and time or the user asks what's they have on their calendar
+        - `create_event(summary: str, start_timestamp: str, end_timestamp: str, description: str | None = None, location: str | None = None)` - when you need to create an event. this also returns details of the event after creation.
 
         Always provide datetime objects in RFC3339 fromat with timezone offset. Unless otherwise specified, use Los Angeles timezone.
         '''

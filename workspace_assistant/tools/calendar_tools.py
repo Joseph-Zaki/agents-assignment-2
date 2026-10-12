@@ -20,6 +20,11 @@ from tools.auth import get_calendar_service
 
 service = get_calendar_service()
 
+def _format_datetime(datetime: datetime) -> str | None:
+    if datetime:
+        return datetime.replace(microsecond=0).isoformat(timespec="seconds")
+    return None
+
 def list_upcoming_events(max_results: int = 10, from_timestamp: str | None = None, to_timestamp: str | None = None) -> dict:
     '''Fetch upcoming events from Google Calendar between 'from_time' and 'to_time'.
 
@@ -39,32 +44,92 @@ def list_upcoming_events(max_results: int = 10, from_timestamp: str | None = Non
         except Exception as e:
             return {"status" : "error", "message" : str(e)}
 
-    formatted_from_time = from_datetime.replace(microsecond=0).isoformat(timespec='seconds')
-
     if to_timestamp:
         try:
             to_datetime = datetime.fromisoformat(to_timestamp)
         except Exception as e:
             return {"status" : "error", "message" : str(e)}
-        formatted_to_time = to_datetime.replace(microsecond=0).isoformat(timespec='seconds')
 
     try:
         service = get_calendar_service()
         events_result = service.events().list(
             calendarId='primary', 
             maxResults=max_results, 
-            timeMin = formatted_from_time,
-            timeMax = formatted_to_time
+            timeMin = _format_datetime(from_datetime),
+            timeMax = _format_datetime(to_datetime)
         ).execute()
         return {"status": "success", "events": events_result.get("items", [])}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
 
-def create_event():
-    pass
+def create_event(summary: str, start_timestamp: str, end_timestamp: str, description: str | None = None, location: str | None = None) -> dict:
+    """
+    Create a new event in the user's primary Google Calendar.
 
-calendar_tools = [list_upcoming_events]
+    Args:
+        summary: The title of the event.
+        start_time: RFC 3339 start timestamp with timezone offset,
+            e.g. '2026-10-12T14:00:00-07:00'.
+        end_time: RFC 3339 end timestamp with timezone offset,
+            e.g. '2026-10-12T15:00:00-07:00'.
+        description (optional): Details about the event.
+        location: Optional event location.
+
+    Returns:
+        A dictionary containing the creation status and event details.
+    """
+    try:
+        start_datetime = datetime.fromisoformat(start_timestamp)
+        end_datetime = datetime.fromisoformat(end_timestamp)
+        # verify timezone offset is included
+        if start_datetime.utcoffset() is None or end_datetime.utcoffset() is None:
+            return {
+                "status": "error",
+                "message": "Both timestamps must include a timezone offset, such as -07:00 or +00:00."
+            }
+
+        if end_datetime <= start_datetime:
+            return {
+                "status" : "error",
+                "message" : "End time must come after start time."
+            }
+
+        event_body = {
+            "summary": summary,
+            "start": {"dateTime": _format_datetime(start_datetime)},
+            "end": {"dateTime": _format_datetime(end_datetime)}
+        }
+
+        if description:
+            event_body["description"] = description
+
+        if location:
+            event_body["location"] = location
+
+        service = get_calendar_service()
+        created_event = service.events().insert(
+            calendarId = "primary",
+            body = event_body
+        ).execute()
+
+        return {
+            "status": "success",
+            "message": "Event created successfully.",
+            "event": {
+                "id": created_event.get("id"),
+                "summary": created_event.get("summary"),
+                "start": created_event.get("start"),
+                "end": created_event.get("end"),
+                "htmlLink": created_event.get("htmlLink"),
+            },
+        }
+
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+calendar_tools = [list_upcoming_events, create_event]
 
 if __name__ == "__main__":
     print(list_upcoming_events())
