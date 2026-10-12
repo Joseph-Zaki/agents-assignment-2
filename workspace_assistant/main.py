@@ -9,18 +9,19 @@ Usage:
 
 import argparse
 import asyncio
+
+from agent import create_agent
 from google.adk.runners import InMemoryRunner
 from google.genai import types as genai_types
 from rich.console import Console
-from rich.prompt import Prompt
 from rich.markdown import Markdown
-
-from agent import create_agent
+from rich.prompt import Prompt
 
 console = Console()
 
 USER_ID = "user"
 SESSION_ID = "session"
+APP_NAME = "workspace_assistant"
 
 
 def run_query(runner, query: str) -> str:
@@ -72,7 +73,17 @@ def main():
 
     args = parser.parse_args()
     agent = create_agent()
-    runner = InMemoryRunner(agent=agent)
+    runner = InMemoryRunner(agent=agent, app_name = APP_NAME)
+
+    # This was needed to avoid "session not found" error
+    async def initialize_Session():
+        await runner.session_service.create_session(
+            user_id=USER_ID,
+            session_id=SESSION_ID,
+            app_name=runner.app_name
+        )
+
+    asyncio.run(initialize_Session())
 
     if args.interactive:
         interactive_mode(runner)

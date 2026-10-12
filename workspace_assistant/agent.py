@@ -6,12 +6,13 @@ Part 2: Add McpToolset for GitHub integration
 """
 
 import os
+
+from config.settings import Settings
 from google.adk.agents import LlmAgent
 from google.adk.tools.mcp_tool import McpToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
 from mcp import StdioServerParameters
-
-from config.settings import Settings
+from tools.calendar_tools import *
 
 # TODO: Import your chosen tool set
 # from tools.calendar_tools import calendar_tools
@@ -20,6 +21,14 @@ from config.settings import Settings
 # TODO Part 2: Import MCP tools
 # from tools.mcp_tools import mcp_tools
 
+SYSTEM_INSTRUCTION = '''
+You are a helpful calendar management agent.
+
+You have the following tool:
+- `list_upcoming_events(max_results: int = 10, from_time: datetime = datetime.now())` - when you need to view upcoming events or the user asks what's they have on their calendar
+
+Always provide datetime objects in RFC3339 with timezone offset. Unless otherwise specified use Los Angeles timezone.
+'''
 
 def create_agent() -> LlmAgent:
     """Create the Workspace Assistant agent."""
@@ -30,7 +39,13 @@ def create_agent() -> LlmAgent:
     # TODO Part 2: Create McpToolset for GitHub
 
     # TODO: Create and return your LlmAgent
-    raise NotImplementedError("Implement create_agent")
+    calendar_agent = LlmAgent(
+        name = "calendar_assistant",
+        model = settings.model_name,
+        instruction=SYSTEM_INSTRUCTION,
+        tools=calendar_tools
+    )
+    return calendar_agent
 
 
 def create_agent_with_tool_search() -> LlmAgent:
